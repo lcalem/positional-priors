@@ -19,7 +19,7 @@ def exp_init(cmd, exps_folder=None, exp_name=None):
     - dump current model code in it (because for now we only save weights)
     '''
     if exps_folder is None:
-        exps_folder = os.path.join(os.environ['HOME'], 'partial_experiments')
+        exps_folder = os.path.join(os.environ['HOME'], 'prior_experiments')
 
     # model folder
     name_suffix = ('_%s' % exp_name) if exp_name else ''

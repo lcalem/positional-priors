@@ -67,7 +67,7 @@ def main(path, folder, epoch, prop, year='2014'):
         exp_folder, prop, epoch = extract_folder_prop_epoch(weights_path)
 
         # load model
-        model = Baseline('%s/partial_experiments/' % os.environ['HOME'], 80, prop)
+        model = Baseline('%s/prior_experiments/' % os.environ['HOME'], 80, prop)
         model.load_weights(weights_path)
 
         # prediction

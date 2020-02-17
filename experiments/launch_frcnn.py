@@ -13,6 +13,7 @@ import model.mrcnn.model as modellib
 from experiments import launch_utils as utils
 
 from data.openimage.oid_first import OIDataset
+from data.pascalvoc.pascal_frcnn import PascalVOCDataset
 
 
 # Directory to save logs and trained model
@@ -116,9 +117,15 @@ class Launcher():
 
             dataset = PascalVOC(self.data_dir, batch_size, mode, x_keys=['image', 'image_id'], y_keys=['multilabel'], p=p)
         elif cfg.DATASET.NAME == 'pascal':
-            dataset = CocoGenerator(self.data_dir, batch_size, mode, x_keys=['image', 'image_id'], y_keys=['multilabel'], year=cfg.DATASET.YEAR, p=p)
+            dataset = PascalVOCDataset()
+            dataset.load_pascal(self.data_dir, batch_size, mode, cfg=cfg)
+            dataset.prepare()
+
         elif cfg.DATASET.NAME == 'pascal_extended':
-            dataset = IrcadLPS(self.data_dir, batch_size, mode, x_keys=['image', 'ambiguity', 'image_id'], y_keys=['segmentation'], split_name='split_1', valid_split_number=0, p=p)
+            dataset = PascalVOCDataset()
+            dataset.load_pascal(self.data_dir, batch_size, mode, extended=True, cfg=cfg)
+            dataset.prepare()
+
         else:
             raise Exception('Unknown dataset %s' % cfg.DATASET.NAME)
 
@@ -182,8 +189,9 @@ class Launcher():
         return list()
 
 
-# python3 launch_oid.py -g 0 -o frcnn_oid_baseline
-# python3 launch_oid.py -g 0 -o oid_baseline -w /home/caleml/partial_experiments/exp_20200115_1952_frcnn_baseline_oid_baseline/openimages20200115T2023/mask_rcnn_openimages_0200.h5
+# python3 launch_frcnn.py -g 0 -o frcnn_oid_baseline
+# python3 launch_frcnn.py -g 2 -o frcnn_pascal_extended -w imagenet
+# python3 launch_frcnn.py -g 0 -o oid_baseline -w /home/caleml/partial_experiments/exp_20200115_1952_frcnn_baseline_oid_baseline/openimages20200115T2023/mask_rcnn_openimages_0200.h5
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--options', '-o', required=True, help='options yaml file')
