@@ -38,9 +38,9 @@ class PascalVOCDataset(dataset.Dataset):
         self.mode = mode
         self.p = p
         self.extended = extended
-        self.nb_classes = cfg.NB_CLASSES
+        self.nb_classes = cfg.DATASET.NB_CLASSES
 
-        self.img_size = (cfg.IMG_SIZE, cfg.IMG_SIZE, cfg.NB_CHANNELS)
+        self.img_size = (cfg.IMAGE.IMG_SIZE, cfg.IMAGE.IMG_SIZE, cfg.IMAGE.NB_CHANNELS)
 
         # class data
         self.class_data = self.load_class_data()
@@ -99,7 +99,7 @@ class PascalVOCDataset(dataset.Dataset):
     def load_annotations(self, annotations_path):
         '''
         one annotation csv line is like:
-        img_id,cls_id,tag_id,is_part,parent_id,xmin,ymin,xmax,ymax,width,height,depth
+        img_id,cls_id,xmin,ymin,xmax,ymax,width,height,depth
 
         ---
 
@@ -118,20 +118,17 @@ class PascalVOCDataset(dataset.Dataset):
         with open(annotations_path, 'r') as f_in:
             for line in f_in:
                 parts = line.strip().split(',')
-                is_part = int(parts[3])
-                if is_part:
-                    continue
 
                 img_id = parts[0]
                 class_id = int(parts[1])
                 ground_truth_cls = self.one_hotify_gt(class_id)
 
-                width = int(parts[9])
-                height = int(parts[10])
+                width = int(parts[6])
+                height = int(parts[7])
                 size = (width, height)
 
                 # convert bbox to % (they are originally in pixels)
-                bbox = (float(parts[5]) / width , float(parts[6]) / height, float(parts[7]) / width, float(parts[8]) / height)
+                bbox = (float(parts[2]) / width , float(parts[3]) / height, float(parts[4]) / width, float(parts[5]) / height)
 
                 samples[img_id]['multilabel'].append(ground_truth_cls)
                 samples[img_id]['bboxes'].append(bbox)
