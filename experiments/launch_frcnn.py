@@ -139,7 +139,7 @@ class Launcher():
         # Create model in training mode
         self.model = modellib.MaskRCNN(mode="training",
                                        cfg=cfg,
-                                       model_dir=self.exp_folder)
+                                       exp_folder=self.exp_folder)
 
         # Starting weights
         if self.init_weights == "imagenet":

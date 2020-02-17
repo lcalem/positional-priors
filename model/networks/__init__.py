@@ -21,6 +21,25 @@ class BaseModel(object):
         if self.verbose:
             log.printcn(log.HEADER, msg)
 
+    def find_last(self):
+        '''
+        Finds the last checkpoint file of the model
+        '''
+        # Pick last directory
+        dir_name = os.path.join(self.exp_folder, 'checkpoints')
+
+        # Find the last checkpoint
+        checkpoints = next(os.walk(dir_name))[2]
+        checkpoints = filter(lambda f: f.endswith(".h5"), checkpoints)
+        checkpoints = sorted(checkpoints)
+        if not checkpoints:
+            import errno
+            raise FileNotFoundError(
+                errno.ENOENT, "Could not find weight files in {}".format(dir_name))
+        checkpoint = os.path.join(dir_name, checkpoints[-1])
+
+        return checkpoint
+
     def load(self, checkpoint_path, custom_objects=None):
         self.model = load_model(checkpoint_path, custom_objects=custom_objects)
 
@@ -91,16 +110,36 @@ class BaseModelTemp(object):
         if self.verbose:
             log.printcn(log.HEADER, msg)
 
+    def find_last(self):
+        '''
+        Finds the last checkpoint file of the model
+        '''
+        # Pick last directory
+        dir_name = os.path.join(self.exp_folder, 'checkpoints')
+
+        # Find the last checkpoint
+        checkpoints = next(os.walk(dir_name))[2]
+        checkpoints = filter(lambda f: f.endswith(".h5"), checkpoints)
+        checkpoints = sorted(checkpoints)
+        if not checkpoints:
+            import errno
+            raise FileNotFoundError(
+                errno.ENOENT, "Could not find weight files in {}".format(dir_name))
+        checkpoint = os.path.join(dir_name, checkpoints[-1])
+
+        return checkpoint
+
     # def load(self, checkpoint_path, custom_objects=None):
     #     self.model = load_model(checkpoint_path, custom_objects=custom_objects)
 
-    # def load_weights(self, weights_path, by_name=False, load_config=True):
-    #     if load_config:
-    #         folder = os.path.abspath(os.path.dirname(weights_path))
-    #         self.load_config(os.path.join(folder, 'config.yaml'))
+    def load_weights(self, weights_path, by_name=False, load_config=False):
+        print('old load_weights')
+        if load_config:
+            folder = os.path.abspath(os.path.dirname(weights_path))
+            self.load_config(os.path.join(folder, 'config.yaml'))
 
-    #     self.build()
-    #     self.model.load_weights(weights_path, by_name=by_name)
+        # self.build()
+        self.keras_model.load_weights(weights_path, by_name=by_name)
 
     def load_config(self, config_path):
         print("Loading options")

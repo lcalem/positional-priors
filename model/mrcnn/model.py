@@ -281,7 +281,7 @@ class MaskRCNN(BaseModel):
                                                                                       mrcnn_feature_maps,
                                                                                       input_image_meta,
                                                                                       self.cfg.ARCHI.POOL_SIZE,
-                                                                                      self.cfg.ARCHI.NB_CLASSES,
+                                                                                      self.cfg.DATASET.NB_CLASSES,
                                                                                       train_bn=self.cfg.ARCHI.TRAIN_BN,
                                                                                       fc_layers_size=self.cfg.ARCHI.FPN_CLASSIF_FC_LAYERS_SIZE)
 
@@ -301,68 +301,38 @@ class MaskRCNN(BaseModel):
 
         return model
 
-    def find_last(self):
-        '''
-        Finds the last checkpoint file of the last trained model in the model directory.
-        Returns:
-            The path of the last checkpoint file
-        '''
-        # Pick last directory
-        dir_name = os.path.join(self.exp_folder, 'checkpoints')
+    # def load_weights(self, filepath, by_name=False, exclude=None):
+    #     '''
+    #     Modified version of the corresponding Keras function with
+    #     the addition of multi-GPU support and the ability to exclude
+    #     some layers from loading.
 
-        # Find the last checkpoint
-        checkpoints = next(os.walk(dir_name))[2]
-        checkpoints = filter(lambda f: f.endswith(".h5"), checkpoints)
-        checkpoints = sorted(checkpoints)
-        if not checkpoints:
-            import errno
-            raise FileNotFoundError(
-                errno.ENOENT, "Could not find weight files in {}".format(dir_name))
-        checkpoint = os.path.join(dir_name, checkpoints[-1])
+    #     exclude: list of layer names to exclude
+    #     '''
+    #     import h5py
+    #     from keras.engine import saving
 
-        return checkpoint
+    #     if exclude:
+    #         by_name = True
 
-    def load_weights(self, filepath, by_name=False, exclude=None):
-        '''
-        Modified version of the corresponding Keras function with
-        the addition of multi-GPU support and the ability to exclude
-        some layers from loading.
-        exclude: list of layer names to exclude
-        '''
-        import h5py
-        # Conditional import to support versions of Keras before 2.2
-        # TODO: remove in about 6 months (end of 2018)
-        try:
-            from keras.engine import saving
-        except ImportError:
-            # Keras before 2.2 used the 'topology' namespace.
-            from keras.engine import topology as saving
+    #     f = h5py.File(filepath, mode='r')
+    #     if 'layer_names' not in f.attrs and 'model_weights' in f:
+    #         f = f['model_weights']
 
-        if exclude:
-            by_name = True
+    #     # In multi-GPU training, we wrap the model. Get layers of the inner model because they have the weights.
+    #     keras_model = self.keras_model
+    #     layers = keras_model.inner_model.layers if hasattr(keras_model, "inner_model") else keras_model.layers
 
-        if h5py is None:
-            raise ImportError('`load_weights` requires h5py.')
-        f = h5py.File(filepath, mode='r')
-        if 'layer_names' not in f.attrs and 'model_weights' in f:
-            f = f['model_weights']
+    #     # Exclude some layers
+    #     if exclude:
+    #         layers = filter(lambda l: l.name not in exclude, layers)
 
-        # In multi-GPU training, we wrap the model. Get layers
-        # of the inner model because they have the weights.
-        keras_model = self.keras_model
-        layers = keras_model.inner_model.layers if hasattr(keras_model, "inner_model")\
-            else keras_model.layers
-
-        # Exclude some layers
-        if exclude:
-            layers = filter(lambda l: l.name not in exclude, layers)
-
-        if by_name:
-            saving.load_weights_from_hdf5_group_by_name(f, layers)
-        else:
-            saving.load_weights_from_hdf5_group(f, layers)
-        if hasattr(f, 'close'):
-            f.close()
+    #     if by_name:
+    #         saving.load_weights_from_hdf5_group_by_name(f, layers)
+    #     else:
+    #         saving.load_weights_from_hdf5_group(f, layers)
+    #     if hasattr(f, 'close'):
+    #         f.close()
 
     def get_imagenet_weights(self):
         '''
