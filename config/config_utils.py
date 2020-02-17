@@ -24,7 +24,7 @@ def parse_options_file(filepath):
     # not an absolute path -> try to find it in the configs/ folder
     # TODO: this is a tad too ugly
     if not filepath.startswith('/'):
-        possible_paths = ['../config/%s' % filepath, '../config/old/%s' % filepath, '%s/partial-labels/config/%s' % (os.environ['HOME'], filepath), '%s/partial-labels/config/old/%s' % (os.environ['HOME'], filepath)]
+        possible_paths = ['../config/%s' % filepath, '../config/old/%s' % filepath, '%s/positional-priors/config/%s' % (os.environ['HOME'], filepath), '%s/positional-priors/config/old/%s' % (os.environ['HOME'], filepath)]
         for filepath in possible_paths:
             if os.path.isfile(filepath):
                 break

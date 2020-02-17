@@ -1,12 +1,11 @@
 parent_config: frcnn_baseline
 archi:
-    name: frcnn_pascal_extended
+    name: frcnn
 dataset:
     name: pascal_extended
     path: /local/DEEPLEARNING/pascalvoc/VOCdevkit/VOC2007
     train: trainval
-    test: test
-    nb_classes: 21
+    nb_classes: 24
 image:
     resize_mode: square
     img_size: 448
@@ -18,8 +17,7 @@ image:
 batch_size: 8
 test_batch_size: 8
 training:
-    nb_epoch: 300       # with 5000 * 8 images per epoch we need 1578816 / (5000*8) = 50 epoch to see every image (100 epoch = 2 'true' epochs)
-    steps_per_epoch: 5000
+    nb_epoch: 20
     optimizer: sgd
     start_lr: 0.001
     lr_momentum: 0.9

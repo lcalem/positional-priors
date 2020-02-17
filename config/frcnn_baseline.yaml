@@ -84,4 +84,4 @@ archi:
 training:
 
     # Gradient norm clipping
-    gradient_clip_nom: 5.0
+    gradient_clip_norm: 5.0

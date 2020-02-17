@@ -365,7 +365,7 @@ def build_rpn_targets(image_shape, anchors, gt_class_ids, gt_boxes, config):
     # RPN Match: 1 = positive anchor, -1 = negative anchor, 0 = neutral
     rpn_match = np.zeros([anchors.shape[0]], dtype=np.int32)
     # RPN bounding boxes: [max anchors per image, (dy, dx, log(dh), log(dw))]
-    rpn_bbox = np.zeros((config.RPN_TRAIN_ANCHORS_PER_IMAGE, 4))
+    rpn_bbox = np.zeros((config.ARCHI.RPN_TRAIN_ANCHORS_PER_IMAGE, 4))
 
     # Handle COCO crowds
     # A crowd box in COCO is a bounding box around several instances. Exclude
