@@ -115,15 +115,14 @@ class Launcher():
             dataset.load_oid(self.data_dir, batch_size, mode, cfg=cfg)
             dataset.prepare()
 
-            dataset = PascalVOC(self.data_dir, batch_size, mode, x_keys=['image', 'image_id'], y_keys=['multilabel'], p=p)
         elif cfg.DATASET.NAME == 'pascal':
             dataset = PascalVOCDataset()
-            dataset.load_pascal(self.data_dir, batch_size, mode, cfg=cfg)
+            dataset.load_pascal(self.data_dir, batch_size, mode, cfg=cfg, p=p)
             dataset.prepare()
 
         elif cfg.DATASET.NAME == 'pascal_extended':
             dataset = PascalVOCDataset()
-            dataset.load_pascal(self.data_dir, batch_size, mode, extended=True, cfg=cfg)
+            dataset.load_pascal(self.data_dir, batch_size, mode, extended=True, cfg=cfg, p=p)
             dataset.prepare()
 
         else:

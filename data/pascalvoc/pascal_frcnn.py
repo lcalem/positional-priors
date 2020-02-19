@@ -91,6 +91,9 @@ class PascalVOCDataset(dataset.Dataset):
 
     def get_annot_file(self, p):
         sufix = '_ext' if self.extended is True else ''
+        if self.p:
+            sufix += '_partial_%s_%s' % (self.p, self.cfg.RANDOM_SEED)
+
         return os.path.join(self.dataset_path, 'Annotations', 'frcnn_%s%s.csv' % (self.mode, sufix))
 
     def one_hotify_gt(self, numeric_gt):
@@ -128,7 +131,7 @@ class PascalVOCDataset(dataset.Dataset):
                 size = (width, height)
 
                 # convert bbox to % (they are originally in pixels)
-                bbox = (float(parts[2]) / width , float(parts[3]) / height, float(parts[4]) / width, float(parts[5]) / height)
+                bbox = (float(parts[2]) / width, float(parts[3]) / height, float(parts[4]) / width, float(parts[5]) / height)
 
                 samples[img_id]['multilabel'].append(ground_truth_cls)
                 samples[img_id]['bboxes'].append(bbox)
