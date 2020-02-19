@@ -571,6 +571,7 @@ def compute_ap(gt_boxes, gt_class_ids, pred_boxes, pred_class_ids, pred_scores, 
     recalls: List of recall values at different class score thresholds.
     overlaps: [pred_boxes, gt_boxes] IoU overlaps.
     '''
+    # print('hello, %s %s %s %s' % (len(gt_boxes), len(gt_class_ids), len(pred_boxes), len(pred_class_ids)))
 
     # Get matches and overlaps
     gt_match, pred_match, overlaps = compute_matches(
@@ -594,10 +595,38 @@ def compute_ap(gt_boxes, gt_class_ids, pred_boxes, pred_class_ids, pred_scores, 
 
     # Compute mean AP over recall range
     indices = np.where(recalls[:-1] != recalls[1:])[0] + 1
-    mAP = np.sum((recalls[indices] - recalls[indices - 1]) *
-                 precisions[indices])
+    mAP = np.sum((recalls[indices] - recalls[indices - 1]) * precisions[indices])
 
     return mAP, precisions, recalls, overlaps
+
+
+def compute_class_ap(gt_boxes, gt_class_ids, pred_boxes, pred_class_ids, pred_scores, nb_classes, iou_threshold=0.5):
+    '''
+    TODO: get rid of the for loop
+    '''
+    cls_maps = np.zeros(nb_classes) - 1
+
+    for i_class in range(nb_classes):
+        # print('\ndoing class %s' % i_class)
+        # print('gt class ids %s' % str(gt_class_ids))
+        # print('pred class ids %s' % str(pred_class_ids))
+        filter_gt = np.where(gt_class_ids == i_class)[0]   # only 1D so we get the first tuple element
+        # print('filter_gt %s' % str(filter_gt))
+        cls_gt_boxes = gt_boxes[filter_gt]
+        cls_gt_class_ids = gt_class_ids[filter_gt]
+
+        filter_pred = np.where(pred_class_ids == i_class)[0]
+        cls_pred_boxes = pred_boxes[filter_pred]
+        cls_pred_class_ids = pred_class_ids[filter_pred]
+        cls_pred_scores = pred_scores[filter_pred]
+
+        # as soon as we have a GT, we compute AP
+        if filter_gt.size > 0:
+            cls_map, _, _, _ = compute_ap(cls_gt_boxes, cls_gt_class_ids, cls_pred_boxes, cls_pred_class_ids, cls_pred_scores, iou_threshold)
+            # print('%s for class %s' % (cls_map, i_class))
+            cls_maps[i_class] = cls_map
+
+    return cls_maps
 
 
 def compute_ap_range(gt_box, gt_class_id, pred_box, pred_class_id, pred_score, iou_thresholds=None, verbose=1):
