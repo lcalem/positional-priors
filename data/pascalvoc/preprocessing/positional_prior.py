@@ -4,6 +4,8 @@ import sys
 import numpy as np
 from collections import defaultdict
 
+from pprint import pprint
+
 
 def create_positional_prior(dataset_path):
     '''
@@ -18,11 +20,14 @@ def create_positional_prior(dataset_path):
     example line:
     000012,7,156,97,351,270,500,333,3
     '''
-
-    count_matrix = np.zeros((24, 24)) * 0.0001           # absolute counts of pairs happening together
-    prior_count_matrix = np.zeros((24, 24, 4))  # absolute counts of positional relations
-    prior_matrix = np.zeros((24, 24, 4))        # storing in percent
+    epsilon = 0.0001
+    absolute_counts = defaultdict(lambda: 0)
+    count_matrix = np.zeros((24, 24), dtype=np.float32) + epsilon       # absolute counts of pairs happening together
+    prior_count_matrix = np.zeros((24, 24, 4), dtype=np.float32)        # absolute counts of positional relations
+    prior_matrix = np.zeros((24, 24, 4), dtype=np.float32)              # storing in percent
     data = defaultdict(list)
+
+    np.seterr('raise')
 
     # get relevant info from dataset
     with open(dataset_path, 'r') as f_in:
@@ -30,24 +35,28 @@ def create_positional_prior(dataset_path):
             parts = line.strip().split(',')
 
             data[parts[0]].append(parts[1:6])   # just get the relevant parts
+            class_id = parts[1]
+            absolute_counts[class_id] += 1
 
     # for each image we examine each pair of objects
     for image_id, image_data in data.items():
 
         # double loop to examine all pairs
         for i, obj_i in enumerate(image_data):
+
+            class_i = int(obj_i[0])
+
             for j, obj_j in enumerate(image_data):
 
                 # don't count pairs with ourselves
                 if i == j:
                     continue
 
-                class_i = int(obj_i[0])
                 class_j = int(obj_j[0])
 
                 # increment counting
-                prior_matrix[class_i][class_j] += 1
-                prior_matrix[class_j][class_i] += 1
+                count_matrix[class_i][class_j] += 1
+                count_matrix[class_j][class_i] += 1
 
                 # check any relationship
                 relation_ij = check_relationship(obj_i, obj_j)
@@ -61,13 +70,21 @@ def create_positional_prior(dataset_path):
 
     # compute the prior matrix in percent
     expanded_count = np.repeat(count_matrix[:, :, np.newaxis], 4, axis=2)
+    print('zeros in expanded_count: %s' % np.count_nonzero(expanded_count == 0))
+    print('epsilon in expanded_count: %s' % np.count_nonzero(expanded_count == epsilon))
+    print('count_matrix[21][15] %s' % count_matrix[21][15])
     prior_matrix = prior_count_matrix * 100 / expanded_count
+
+    print('prior_matrix[21][15][0] %s' % prior_matrix[21][15][0])
+
+    pprint(absolute_counts)
 
     # saving as files
     dataset_folder = os.path.dirname(dataset_path)
-    np.save(os.path.join(dataset_folder, 'prior_counting'), count_matrix)
-    np.save(os.path.join(dataset_folder, 'prior_relations_count'), prior_count_matrix)
-    np.save(os.path.join(dataset_folder, 'prior_matrix'), prior_matrix)
+    dataset_name = os.path.splitext(os.path.basename(dataset_path))[0]
+    np.save(os.path.join(dataset_folder, 'prior_counting_%s' % dataset_name), count_matrix)
+    np.save(os.path.join(dataset_folder, 'prior_relations_count_%s' % dataset_name), prior_count_matrix)
+    np.save(os.path.join(dataset_folder, 'prior_matrix_%s' % dataset_name), prior_matrix)
 
 
 def check_relationship(object_1, object_2):
@@ -88,17 +105,25 @@ def check_relationship(object_1, object_2):
     if (xmin1 > xmin2) and (xmax1 < xmax2) and (ymin1 > ymin2) and (ymax1 < ymax2):
         return 0
 
-    # intersect
-    if ((ymin1 < ymin2 < ymax1) or (ymin2 < ymin1 < ymax2)) and ((xmin1 < xmin2 < xmax1) or (xmin2 < xmin1 < xmax2)):
-        return 1
-
     # above
-    if (ymax1 < ymin2):
+    elif (ymax1 < ymin2):
         return 2
 
     # below
-    if (ymin1 > ymax2):
+    elif (ymin1 > ymax2):
         return 3
+
+    # intersect
+    inter_xmin = np.maximum(xmin1, xmin2)
+    inter_ymin = np.maximum(ymin1, ymin2)
+    inter_xmax = np.minimum(xmax1, xmax2)
+    inter_ymax = np.minimum(ymax1, ymax2)
+    intersection = np.maximum(inter_xmax - inter_xmin, 0) * np.maximum(inter_ymax - inter_ymin, 0)
+    area1 = (xmax1 - xmin1) * (ymax1 - ymin1)
+    area2 = (xmax2 - xmin2) * (ymax2 - ymin2)
+    # not ((xmax1 < xmin2) or (xmin1 > xmax2) or (ymax1 < ymin2) or (ymin1 > ymin2)):
+    if (intersection > 0) and (intersection != area1) and (intersection != area2):
+        return 1
 
     return None
 
@@ -123,6 +148,7 @@ def inspect_prior(prior_path):
 
 
 # python3 positional_prior.py create /local/DEEPLEARNING/pascalvoc/VOCdevkit/VOC2007/Annotations/frcnn_trainval_ext.csv
+# python3 positional_prior.py inspect /local/DEEPLEARNING/pascalvoc/VOCdevkit/VOC2007/Annotations/prior_matrix.csv
 if __name__ == '__main__':
     action = sys.argv[1]
     filepath = sys.argv[2]
